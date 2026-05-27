@@ -1,0 +1,1044 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FlightQ | HKG to FUK Fare Search</title>
+  <link rel="preconnect" href="https://api.fontshare.com">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <style>
+    /* ── Tokens ─────────────────────────────────────────────── */
+    :root {
+      color-scheme: light;
+      --accent:        #01696f;
+      --accent-strong: #014f54;
+      --accent-soft:   #dceeed;
+      --bg:            #f7f2e9;
+      --bg-subtle:     #eee6d8;
+      --surface:       #fffdfa;
+      --surface-up:    #ffffff;
+      --text:          #1d2524;
+      --muted:         #69716f;
+      --border:        #ded5c7;
+      --border-strong: #c9beaf;
+      --good:          #16814e;
+      --shadow:        0 18px 42px rgba(30,35,32,.10);
+      --r:             8px;
+      --ctrl:          44px;
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --accent:        #55c4bd;
+      --accent-strong: #7bd8d2;
+      --accent-soft:   #123f41;
+      --bg:            #111816;
+      --bg-subtle:     #18221f;
+      --surface:       #18201e;
+      --surface-up:    #202927;
+      --text:          #eef5f0;
+      --muted:         #a5b0ac;
+      --border:        #34423f;
+      --border-strong: #4a5a56;
+      --good:          #69d39c;
+      --shadow:        0 18px 42px rgba(0,0,0,.28);
+    }
+
+    /* ── Reset / Base ───────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { min-width: 320px; background: var(--bg); }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(180deg,rgba(255,255,255,.46),rgba(255,255,255,0) 340px), var(--bg);
+      color: var(--text);
+      font-family: "Satoshi", ui-sans-serif, system-ui, -apple-system, sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+    :root[data-theme="dark"] body {
+      background: linear-gradient(180deg,rgba(85,196,189,.08),rgba(85,196,189,0) 340px), var(--bg);
+    }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: .62; }
+    a { color: var(--accent-strong); }
+
+    /* ── Layout ─────────────────────────────────────────────── */
+    .app {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 40px;
+    }
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 42px; height: 42px;
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      background: var(--surface);
+      color: var(--accent-strong);
+      box-shadow: 0 8px 22px rgba(1,105,111,.09);
+    }
+    .brand h1 { margin: 0; font-size: clamp(1.45rem,2.4vw,2rem); line-height: 1.05; }
+    .brand p  { margin: 3px 0 0; color: var(--muted); font-size: .93rem; }
+    .top-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0,390px) minmax(0,1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    /* ── Buttons ────────────────────────────────────────────── */
+    .icon-btn, .ghost-btn, .primary-btn, .select-btn {
+      min-height: var(--ctrl);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      background: var(--surface);
+      color: var(--text);
+      transition: border-color 160ms, background 160ms, transform 160ms;
+    }
+    .icon-btn {
+      display: inline-grid;
+      place-items: center;
+      width: var(--ctrl);
+      padding: 0;
+    }
+    .ghost-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 14px;
+      color: var(--accent-strong);
+      font-weight: 700;
+    }
+    .primary-btn, .select-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      padding: 0 18px;
+    }
+    :root[data-theme="dark"] .primary-btn,
+    :root[data-theme="dark"] .select-btn { color: #0b1715; }
+    .icon-btn:hover, .ghost-btn:hover, .primary-btn:hover, .select-btn:hover {
+      transform: translateY(-1px);
+      border-color: var(--accent);
+    }
+
+    /* ── Panels ─────────────────────────────────────────────── */
+    .panel, .results-shell {
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      background: color-mix(in srgb, var(--surface) 94%, transparent);
+      box-shadow: var(--shadow);
+    }
+    .panel { padding: 18px; }
+    .panel + .panel { margin-top: 14px; box-shadow: none; }
+    .panel-header, .results-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .panel-title, .results-title { margin: 0; font-size: 1.08rem; line-height: 1.25; }
+    .panel-sub, .results-sub { margin: 4px 0 0; color: var(--muted); font-size: .88rem; }
+
+    /* ── Form ───────────────────────────────────────────────── */
+    .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .field { display: grid; gap: 7px; }
+    .field.full { grid-column: 1 / -1; }
+    label, .field-label {
+      color: var(--muted);
+      font-size: .76rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    input, select {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 100%;
+      height: var(--ctrl);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      background: var(--surface-up);
+      color: var(--text);
+      padding: 0 12px;
+      outline: none;
+      transition: border-color 160ms, box-shadow 160ms;
+    }
+    select {
+      padding-right: 34px;
+      background-image:
+        linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+        linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+      background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%;
+      background-repeat: no-repeat;
+      background-size: 5px 5px, 5px 5px;
+    }
+    input[type="date"] { color-scheme: light; }
+    :root[data-theme="dark"] input[type="date"] { color-scheme: dark; }
+    input:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+    }
+    /* Dark-mode inputs — pure CSS, no JS overrides needed */
+    :root[data-theme="dark"] input,
+    :root[data-theme="dark"] select {
+      background-color: #f4f1eb;
+      color: #1d2524;
+      border-color: #34423f;
+    }
+    :root[data-theme="dark"] .icon-btn,
+    :root[data-theme="dark"] .ghost-btn {
+      background: #18201e;
+      color: #7bd8d2;
+      border-color: #34423f;
+    }
+    .route-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: end; }
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 6px;
+      padding: 5px;
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      background: var(--bg-subtle);
+    }
+    .segment {
+      min-height: 34px;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font-size: .87rem;
+      font-weight: 700;
+    }
+    .segment.active {
+      background: var(--surface-up);
+      color: var(--accent-strong);
+      box-shadow: 0 4px 12px rgba(25,32,29,.08);
+    }
+    .form-footer { display: flex; gap: 10px; margin-top: 16px; }
+    .form-footer .primary-btn { flex: 1; }
+
+    /* ── Settings ───────────────────────────────────────────── */
+    .settings-toggle { width: 100%; justify-content: space-between; margin: -2px 0 0; }
+    .settings-body { display: none; padding-top: 16px; }
+    .settings-body.open { display: grid; gap: 12px; }
+    .notice {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      background: var(--accent-soft);
+      padding: 11px;
+      font-size: .88rem;
+    }
+    .notice svg { flex: 0 0 auto; margin-top: 2px; color: var(--accent-strong); }
+
+    /* ── Results ────────────────────────────────────────────── */
+    .results-shell { min-height: 640px; overflow: hidden; }
+    .results-header { padding: 20px 20px 0; margin-bottom: 14px; }
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 32px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--surface-up);
+      color: var(--muted);
+      padding: 0 11px;
+      font-size: .82rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--good); }
+    .tabs {
+      display: flex;
+      gap: 8px;
+      padding: 0 20px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .tab {
+      min-height: 38px;
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      background: var(--surface);
+      color: var(--muted);
+      padding: 0 13px;
+      font-weight: 700;
+    }
+    .tab.active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-strong); }
+    .summary-bar {
+      display: grid;
+      grid-template-columns: repeat(3,minmax(0,1fr));
+      gap: 10px;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      background: color-mix(in srgb, var(--bg-subtle) 42%, transparent);
+    }
+    .metric { display: grid; gap: 2px; }
+    .metric strong { font-size: 1.02rem; line-height: 1.2; }
+    .metric span { color: var(--muted); font-size: .78rem; font-weight: 700; text-transform: uppercase; }
+    .results-list { display: grid; gap: 12px; padding: 16px 20px 20px; }
+
+    /* ── Flight Card ────────────────────────────────────────── */
+    .flight-card {
+      display: grid;
+      grid-template-columns: minmax(0,1.2fr) minmax(220px,1.5fr) minmax(122px,auto);
+      gap: 16px;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      background: var(--surface-up);
+      padding: 16px;
+    }
+    .airline { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .airline-logo {
+      display: grid;
+      place-items: center;
+      width: 42px; height: 42px;
+      flex: 0 0 auto;
+      border-radius: var(--r);
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+      font-weight: 700;
+    }
+    .airline-name, .price { margin: 0; font-size: 1.02rem; font-weight: 700; line-height: 1.2; }
+    .flight-num, .route-meta, .price-note { margin: 4px 0 0; color: var(--muted); font-size: .86rem; }
+    .timeline { display: grid; gap: 9px; min-width: 0; }
+    .time-row {
+      display: grid;
+      grid-template-columns: minmax(64px,auto) minmax(44px,1fr) minmax(64px,auto);
+      gap: 10px;
+      align-items: center;
+    }
+    .time { font-size: 1.16rem; font-weight: 700; line-height: 1; white-space: nowrap; }
+    .time.right { text-align: right; }
+    .route-line {
+      position: relative;
+      height: 2px;
+      min-width: 44px;
+      background: var(--border-strong);
+    }
+    .route-line::before, .route-line::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 8px; height: 8px;
+      border: 2px solid var(--accent);
+      border-radius: 50%;
+      background: var(--surface-up);
+      transform: translateY(-50%);
+    }
+    .route-line::before { left: 0; }
+    .route-line::after  { right: 0; }
+    .card-actions { display: grid; justify-items: end; gap: 9px; }
+    .bag-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 28px;
+      border-radius: 999px;
+      padding: 0 10px;
+      background: color-mix(in srgb, var(--good) 15%, transparent);
+      color: var(--good);
+      font-size: .8rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .bag-badge.muted { background: color-mix(in srgb, var(--muted) 13%, transparent); color: var(--muted); }
+    .select-btn { min-width: 92px; }
+
+    /* ── States ─────────────────────────────────────────────── */
+    .empty, .error {
+      display: grid;
+      place-items: center;
+      gap: 10px;
+      min-height: 260px;
+      padding: 28px;
+      color: var(--muted);
+      text-align: center;
+    }
+    .empty h3, .error h3 { margin: 0; color: var(--text); font-size: 1.08rem; }
+    .empty p,  .error p  { max-width: 520px; margin: 0; }
+
+    /* ── Skeleton ───────────────────────────────────────────── */
+    .skeleton-card {
+      display: grid;
+      grid-template-columns: 1.1fr 1.5fr .7fr;
+      gap: 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      background: var(--surface-up);
+      padding: 16px;
+    }
+    .skeleton-stack { display: grid; align-content: center; gap: 10px; }
+    .skeleton-line {
+      height: 14px;
+      border-radius: 999px;
+      background: linear-gradient(90deg,var(--bg-subtle),color-mix(in srgb,var(--surface-up) 60%,var(--bg-subtle)),var(--bg-subtle));
+      background-size: 220% 100%;
+      animation: shimmer 1.2s ease-in-out infinite;
+    }
+    .skeleton-line.lg { height: 22px; width: 78%; }
+    @keyframes shimmer { to { background-position: -220% 0; } }
+
+    /* ── Accessibility ──────────────────────────────────────── */
+    .sr-only {
+      position: absolute;
+      width: 1px; height: 1px;
+      padding: 0; overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border: 0;
+    }
+    .icon-fallback { display: none; color: currentColor; font-size: .86rem; font-weight: 700; line-height: 1; }
+    .lucide-unavailable .icon-btn .icon-fallback,
+    .lucide-unavailable .brand-mark .icon-fallback { display: inline; }
+
+    /* ── Responsive ─────────────────────────────────────────── */
+    @media (max-width: 920px) {
+      .workspace { grid-template-columns: 1fr; }
+      .results-shell { min-height: auto; }
+    }
+    @media (max-width: 680px) {
+      .app { width: min(100% - 22px, 560px); padding-top: 18px; }
+      .topbar { align-items: flex-start; }
+      .brand p { display: none; }
+      .field-grid, .route-row, .summary-bar { grid-template-columns: 1fr; }
+      .form-footer { flex-direction: column; }
+      .results-header, .tabs, .summary-bar, .results-list { padding-left: 14px; padding-right: 14px; }
+      .results-header { flex-direction: column; }
+      .tabs { overflow-x: auto; }
+      .flight-card { grid-template-columns: 1fr; gap: 14px; }
+      .card-actions { grid-template-columns: 1fr auto; align-items: center; justify-items: start; }
+      .select-btn { width: auto; }
+      .skeleton-card { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand" aria-label="FlightQ">
+        <div class="brand-mark" aria-hidden="true">
+          <i data-lucide="plane-takeoff"></i>
+          <span class="icon-fallback">FQ</span>
+        </div>
+        <div>
+          <h1>FlightQ</h1>
+          <p>HKG to FUK fare finder with baggage-first filters</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn" id="themeToggle" type="button" aria-label="Toggle dark mode">
+          <i data-lucide="moon"></i>
+          <span class="icon-fallback">T</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <!-- ── Search Panel ── -->
+      <section aria-label="Flight search controls">
+        <form class="panel" id="searchForm">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">Search</h2>
+              <p class="panel-sub">Round-trip defaults are set for morning out and evening back.</p>
+            </div>
+          </div>
+
+          <div class="route-row">
+            <div class="field">
+              <label for="origin">From</label>
+              <input id="origin" name="origin" autocomplete="off" maxlength="3" value="HKG" aria-describedby="originHelp">
+              <span class="sr-only" id="originHelp">Three letter airport code</span>
+            </div>
+            <button class="icon-btn" id="swapRoute" type="button" aria-label="Swap route">
+              <i data-lucide="arrow-left-right"></i>
+              <span class="icon-fallback">&#8644;</span>
+            </button>
+            <div class="field">
+              <label for="destination">To</label>
+              <input id="destination" name="destination" autocomplete="off" maxlength="3" value="FUK">
+            </div>
+          </div>
+
+          <div class="field-grid" style="margin-top:12px">
+            <div class="field">
+              <label for="outboundDate">Outbound</label>
+              <input id="outboundDate" name="outboundDate" type="date">
+            </div>
+            <div class="field">
+              <label for="returnDate">Return</label>
+              <input id="returnDate" name="returnDate" type="date">
+            </div>
+            <div class="field">
+              <label for="passengers">Passengers</label>
+              <select id="passengers" name="passengers">
+                <option value="1">1 adult</option>
+                <option value="2">2 adults</option>
+                <option value="3">3 adults</option>
+                <option value="4">4 adults</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="cabin">Cabin</label>
+              <select id="cabin" name="cabin">
+                <option value="economy">Economy</option>
+                <option value="business">Business</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="baggage">Checked baggage</label>
+              <select id="baggage" name="baggage">
+                <option value="20">20kg</option>
+                <option value="23">23kg</option>
+                <option value="none">None</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="maxStops">Max stops</label>
+              <select id="maxStops" name="maxStops">
+                <option value="any">Any</option>
+                <option value="0">Non-stop</option>
+                <option value="1">1 stop</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="airlineFilter">Airline</label>
+              <select id="airlineFilter" name="airlineFilter">
+                <option value="any">Any Airline</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="sortBy">Sort by</label>
+              <select id="sortBy" name="sortBy">
+                <option value="price_asc">Price (Lowest first)</option>
+                <option value="price_desc">Price (Highest first)</option>
+                <option value="time_asc">Duration (Fastest first)</option>
+                <option value="dep_asc">Departure (Earliest first)</option>
+                <option value="dep_desc">Departure (Latest first)</option>
+              </select>
+            </div>
+            <div class="field full">
+              <span class="field-label">Outbound time</span>
+              <div class="segmented" role="group" aria-label="Outbound departure window" data-win-group="outbound">
+                <button class="segment active" type="button" data-value="morning">Morning</button>
+                <button class="segment" type="button" data-value="afternoon">Afternoon</button>
+                <button class="segment" type="button" data-value="evening">Evening</button>
+              </div>
+            </div>
+            <div class="field full">
+              <span class="field-label">Return time</span>
+              <div class="segmented" role="group" aria-label="Return departure window" data-win-group="return">
+                <button class="segment" type="button" data-value="morning">Morning</button>
+                <button class="segment" type="button" data-value="afternoon">Afternoon</button>
+                <button class="segment active" type="button" data-value="evening">Evening</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-footer">
+            <button class="primary-btn" type="submit">
+              <i data-lucide="search"></i>
+              Search fares
+            </button>
+            <button class="ghost-btn" id="resetFilters" type="button">
+              <i data-lucide="rotate-ccw"></i>
+              Reset
+            </button>
+          </div>
+        </form>
+
+        <!-- ── Settings Panel ── -->
+        <section class="panel" aria-label="API settings">
+          <button class="ghost-btn settings-toggle" id="settingsToggle" type="button"
+                  aria-expanded="false" aria-controls="settingsBody">
+            <span style="display:inline-flex;align-items:center;gap:8px">
+              <i data-lucide="sliders-horizontal"></i>Settings
+            </span>
+            <i data-lucide="chevron-down" data-chevron></i>
+          </button>
+          <div class="settings-body" id="settingsBody">
+            <div class="field">
+              <label for="apiProvider">API provider</label>
+              <select id="apiProvider">
+                <option value="demo">Demo Mode</option>
+                <option value="rapidapi">RapidAPI DataCrawler</option>
+                <option value="serpapi">SerpApi Google Flights</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="apiKey">API key</label>
+              <input id="apiKey" type="password" placeholder="Kept in memory only" autocomplete="off">
+            </div>
+            <div class="notice">
+              <i data-lucide="shield-check"></i>
+              <span>Keys are not saved. Demo Mode uses built-in HKG-FUK fares when no key is supplied.</span>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-- ── Results Panel ── -->
+      <section class="results-shell" aria-label="Flight results">
+        <div class="results-header">
+          <div>
+            <h2 class="results-title" id="routeTitle">HKG to FUK</h2>
+            <p class="results-sub" id="routeSub">Morning outbound, evening return, 20kg checked bag</p>
+          </div>
+          <div class="status-chip" id="statusChip">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span>Demo Mode</span>
+          </div>
+        </div>
+
+        <nav class="tabs" aria-label="Trip direction">
+          <button class="tab active" type="button" data-tab="outbound">Outbound</button>
+          <button class="tab" type="button" data-tab="return">Return</button>
+        </nav>
+
+        <div class="summary-bar" aria-label="Result summary">
+          <div class="metric"><strong id="bestPrice">HKD 1,650</strong><span>Lowest fare</span></div>
+          <div class="metric"><strong id="fastestTime">4h 40m</strong><span>Fastest option</span></div>
+          <div class="metric"><strong id="bagCount">2 with bags</strong><span>Baggage matches</span></div>
+        </div>
+
+        <div class="results-list" id="resultsList" aria-live="polite"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script>
+    // ── State ────────────────────────────────────────────────
+    const state = {
+      apiProvider: "demo",
+      apiKey: "",
+      activeTab: "outbound",
+      timeWindows: { outbound: "morning", return: "evening" },
+      theme: window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light",
+      flights: { outbound: [], return: [] },
+      lastMessage: "Demo Mode"
+    };
+
+    const WIN = {
+      morning:   { label: "Morning",   start: 6,  end: 12 },
+      afternoon: { label: "Afternoon", start: 12, end: 18 },
+      evening:   { label: "Evening",   start: 18, end: 24 }
+    };
+
+    // ── Mock data ────────────────────────────────────────────
+    const MOCK = {
+      outbound: [
+        { id:"cx564-out",  airline:"Cathay Pacific", flightNumber:"CX564",  from:"HKG", to:"FUK", depart:"08:30", arrive:"13:10", durationMinutes:280, stops:0, stopLabel:"Non-stop",     price:2800, bagKg:23 },
+        { id:"uo821-out",  airline:"HK Express",     flightNumber:"UO821",  from:"HKG", to:"FUK", depart:"09:15", arrive:"14:05", durationMinutes:290, stops:0, stopLabel:"Non-stop",     price:1650, bagKg:0  },
+        { id:"jl9613-out", airline:"Japan Airlines", flightNumber:"JL9613", from:"HKG", to:"FUK", depart:"10:00", arrive:"15:30", durationMinutes:330, stops:1, stopLabel:"1 stop (NRT)", price:3200, bagKg:23 }
+      ],
+      return: [
+        { id:"cx565-ret",  airline:"Cathay Pacific", flightNumber:"CX565",  from:"FUK", to:"HKG", depart:"19:30", arrive:"22:15", durationMinutes:165, stops:0, stopLabel:"Non-stop",     price:2900, bagKg:23 },
+        { id:"uo822-ret",  airline:"HK Express",     flightNumber:"UO822",  from:"FUK", to:"HKG", depart:"20:10", arrive:"23:05", durationMinutes:175, stops:0, stopLabel:"Non-stop",     price:1750, bagKg:0  },
+        { id:"nh1862-ret", airline:"ANA",             flightNumber:"NH1862", from:"FUK", to:"HKG", depart:"18:50", arrive:"22:40", durationMinutes:230, stops:1, stopLabel:"1 stop (HND)", price:3400, bagKg:23 }
+      ]
+    };
+
+    // ── DOM refs ─────────────────────────────────────────────
+    const $ = (id) => document.getElementById(id);
+    const el = {
+      html:           document.documentElement,
+      form:           $("searchForm"),
+      origin:         $("origin"),
+      destination:    $("destination"),
+      outboundDate:   $("outboundDate"),
+      returnDate:     $("returnDate"),
+      passengers:     $("passengers"),
+      cabin:          $("cabin"),
+      baggage:        $("baggage"),
+      maxStops:       $("maxStops"),
+      airlineFilter:  $("airlineFilter"),
+      sortBy:         $("sortBy"),
+      apiProvider:    $("apiProvider"),
+      apiKey:         $("apiKey"),
+      resultsList:    $("resultsList"),
+      routeTitle:     $("routeTitle"),
+      routeSub:       $("routeSub"),
+      statusChip:     $("statusChip"),
+      bestPrice:      $("bestPrice"),
+      fastestTime:    $("fastestTime"),
+      bagCount:       $("bagCount"),
+      settingsToggle: $("settingsToggle"),
+      settingsBody:   $("settingsBody"),
+      themeToggle:    $("themeToggle"),
+      resetFilters:   $("resetFilters"),
+      swapRoute:      $("swapRoute")
+    };
+
+    // ── Helpers ──────────────────────────────────────────────
+    const isoOffset = (days) => { const d = new Date(); d.setDate(d.getDate() + days); return d.toISOString().slice(0, 10); };
+    const fmtMoney  = (v) => Number.isFinite(v) ? `HKD ${Math.round(v).toLocaleString("en-HK")}` : "Price N/A";
+    const fmtDur    = (m) => { if (!Number.isFinite(m)) return "Duration N/A"; const h = Math.floor(m/60), min = m%60; return min ? `${h}h ${min}m` : `${h}h`; };
+    const esc       = (v) => String(v).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+    const initials  = (name) => name.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join("").toUpperCase();
+    const hourOf    = (t) => { const [h] = String(t).split(":").map(Number); return Number.isFinite(h) ? h : 0; };
+    const reqBagKg  = () => el.baggage.value === "none" ? 0 : Number(el.baggage.value);
+
+    // ── Filters ──────────────────────────────────────────────
+    const inWindow = (f, dir) => { const w = WIN[state.timeWindows[dir]]; const h = hourOf(f.depart); return h >= w.start && h < w.end; };
+    const inStops  = (f) => el.maxStops.value === "any" || f.stops <= Number(el.maxStops.value);
+    const hasBag   = (f) => { const r = reqBagKg(); return r === 0 || f.bagKg >= r; };
+
+    // populate airline dropdown after flights load
+    function populateAirlines(dir) {
+      if (!state.flights[dir]) return;
+      const airlines = [...new Set(state.flights[dir].map(f => f.airline).filter(Boolean))].sort();
+      const sel = el.airlineFilter;
+      const prev = sel.value;
+      if (sel.options.length <= 1 || sel.dataset.populated !== String(state.flights[dir].length) + dir) {
+        sel.innerHTML = '<option value="any">Any Airline</option>' +
+          airlines.map(a => `<option value="${a}"${a === prev ? ' selected' : ''}>${a}</option>`).join('');
+        sel.dataset.populated = String(state.flights[dir].length) + dir;
+      }
+    }
+
+    const sortFlights = (flights) => {
+      const s = el.sortBy.value;
+      return [...flights].sort((a, b) => {
+        if (s === "price_asc")  return a.price - b.price;
+        if (s === "price_desc") return b.price - a.price;
+        if (s === "time_asc")   return a.durationMinutes - b.durationMinutes;
+        if (s === "dep_asc")    return a.depart.localeCompare(b.depart);
+        if (s === "dep_desc")   return b.depart.localeCompare(a.depart);
+        return a.price - b.price;
+      });
+    };
+
+    const inAirline = (f) => el.airlineFilter.value === "any" || f.airline === el.airlineFilter.value;
+
+    const filtered = (dir) => sortFlights(
+      state.flights[dir]
+        .filter(f => inWindow(f, dir))
+        .filter(inStops)
+        .filter(inAirline)
+        .filter(f => el.baggage.value === "none" || f.bagKg >= reqBagKg() || f.bagKg === 0)
+    );
+
+    // ── Render ───────────────────────────────────────────────
+    function updateHeader() {
+      const o = el.origin.value.toUpperCase(), d = el.destination.value.toUpperCase();
+      const bag = el.baggage.value === "none" ? "no checked bag" : `${el.baggage.value}kg checked bag`;
+      el.routeTitle.textContent = `${o} to ${d}`;
+      el.routeSub.textContent   = `${WIN[state.timeWindows.outbound].label} outbound, ${WIN[state.timeWindows.return].label.toLowerCase()} return, ${bag}`;
+      el.statusChip.innerHTML   = `<span class="status-dot" aria-hidden="true"></span><span>${esc(state.lastMessage)}</span>`;
+    }
+
+    function updateSummary(flights) {
+      if (!flights.length) {
+        el.bestPrice.textContent = el.fastestTime.textContent = "No match";
+        el.bagCount.textContent  = "0 with bags";
+        return;
+      }
+      el.bestPrice.textContent   = fmtMoney(flights.reduce((a,b) => b.price < a.price ? b : a).price);
+      el.fastestTime.textContent = fmtDur(flights.reduce((a,b) => b.durationMinutes < a.durationMinutes ? b : a).durationMinutes);
+      el.bagCount.textContent    = `${flights.filter(hasBag).length} with bags`;
+    }
+
+    function renderSkeleton() {
+      el.resultsList.innerHTML = Array.from({ length: 3 }, () => `
+        <div class="skeleton-card" aria-hidden="true">
+          <div class="skeleton-stack"><span class="skeleton-line lg"></span><span class="skeleton-line" style="width:58%"></span></div>
+          <div class="skeleton-stack"><span class="skeleton-line lg" style="width:92%"></span><span class="skeleton-line" style="width:74%"></span></div>
+          <div class="skeleton-stack"><span class="skeleton-line lg" style="width:82%"></span><span class="skeleton-line" style="width:62%"></span></div>
+        </div>`).join("");
+    }
+
+    function renderEmpty() {
+      el.resultsList.innerHTML = `
+        <div class="empty">
+          <i data-lucide="calendar-x"></i>
+          <h3>No flights match these filters</h3>
+          <p>Try a wider departure window, allow one stop, or switch baggage to none to compare low-cost fares.</p>
+        </div>`;
+      refreshIcons();
+    }
+
+    function renderFlights() {
+      populateAirlines(state.activeTab);
+      updateHeader();
+      const flights = filtered(state.activeTab);
+      updateSummary(flights);
+      if (!flights.length) { renderEmpty(); return; }
+      el.resultsList.innerHTML = flights.map(f => {
+        const bag = hasBag(f);
+        const bagText = f.bagKg > 0 ? `${f.bagKg}kg included` : "No bag";
+        return `
+          <article class="flight-card">
+            <div class="airline">
+              <div class="airline-logo" aria-hidden="true">${esc(initials(f.airline))}</div>
+              <div>
+                <h3 class="airline-name">${esc(f.airline)}</h3>
+                <p class="flight-num">${esc(f.flightNumber)}</p>
+              </div>
+            </div>
+            <div class="timeline">
+              <div class="time-row">
+                <span class="time">${esc(f.depart)}</span>
+                <span class="route-line" aria-hidden="true"></span>
+                <span class="time right">${esc(f.arrive)}</span>
+              </div>
+              <p class="route-meta">${esc(f.from)} to ${esc(f.to)} &middot; ${fmtDur(f.durationMinutes)} &middot; ${esc(f.stopLabel)}</p>
+            </div>
+            <div class="card-actions">
+              <div style="text-align:right">
+                <p class="price">${fmtMoney(f.price)}</p>
+                <p class="price-note">per adult</p>
+              </div>
+              <span class="bag-badge ${bag ? "" : "muted"}">${bag ? "&#10003;" : "&#10007;"} ${esc(bagText)}</span>
+              <button class="select-btn" type="button" data-flight-id="${esc(f.id)}">Select</button>
+            </div>
+          </article>`;
+      }).join("");
+    }
+
+    // ── API normalisation ────────────────────────────────────
+    function normaliseTime(v) {
+      if (!v) return "00:00";
+      const d = new Date(v);
+      if (!isNaN(d)) return d.toLocaleTimeString("en-GB", { hour:"2-digit", minute:"2-digit", hour12:false });
+      const m = String(v).match(/(\d{1,2}):(\d{2})/);
+      return m ? `${m[1].padStart(2,"0")}:${m[2]}` : "00:00";
+    }
+    function parseDur(v) {
+      if (Number.isFinite(v)) return v;
+      const t = String(v || "");
+      const h = t.match(/(\d+)\s*h/), m = t.match(/(\d+)\s*m/);
+      return (h ? +h[1]*60 : 0) + (m ? +m[1] : 0);
+    }
+    const inferBag  = (a) => /express|low cost/i.test(a) ? 0 : 23;
+    const stopLabel = (n) => n === 0 ? "Non-stop" : `${n} stop${n > 1 ? "s" : ""}`;
+
+    function mapSerp(data, dir) {
+      return [...(data.best_flights||[]), ...(data.other_flights||[])].map((item, i) => {
+        const first = item.flights?.[0] || {}, last = item.flights?.at(-1) || first;
+        const stops = Math.max((item.flights?.length || 1) - 1, 0);
+        return {
+          id: `serp-${dir}-${i}`,
+          airline: first.airline || "Airline",
+          flightNumber: first.flight_number || "Flight",
+          from: first.departure_airport?.id || el.origin.value.toUpperCase(),
+          to:   last.arrival_airport?.id    || el.destination.value.toUpperCase(),
+          depart: normaliseTime(first.departure_airport?.time),
+          arrive: normaliseTime(last.arrival_airport?.time),
+          durationMinutes: item.total_duration || parseDur(first.duration),
+          stops, stopLabel: stopLabel(stops),
+          price: Number(item.price) || NaN,
+          bagKg: inferBag(first.airline)
+        };
+      });
+    }
+
+    function mapRapid(data, dir) {
+      return (data.topFlights || []).map((item, i) => {
+        const f = item.flights?.[0] || item;
+        const stops = Number(item.stops ?? f.stops ?? 0);
+        const airline = f.airline || item.airline || "Airline";
+        return {
+          id: `rapid-${dir}-${i}`,
+          airline,
+          flightNumber: f.flightNumber || f.flight_number || item.flightNumber || "Flight",
+          from: f.departureAirport || f.from || el.origin.value.toUpperCase(),
+          to:   f.arrivalAirport   || f.to   || el.destination.value.toUpperCase(),
+          depart: normaliseTime(f.departureTime || f.departure_time || item.departureTime),
+          arrive: normaliseTime(f.arrivalTime   || f.arrival_time   || item.arrivalTime),
+          durationMinutes: parseDur(f.duration || item.duration),
+          stops, stopLabel: stopLabel(stops),
+          price: Number(item.price?.amount || item.price || f.price) || NaN,
+          bagKg: inferBag(airline)
+        };
+      });
+    }
+
+    // ── API fetchers ─────────────────────────────────────────
+    const searchPayload = () => ({
+      origin: el.origin.value.toUpperCase(),
+      destination: el.destination.value.toUpperCase(),
+      date: el.outboundDate.value,
+      returnDate: el.returnDate.value,
+      tripType: "round_trip",
+      currency: "HKD",
+      passengers: { adults: Number(el.passengers.value) },
+      cabin: el.cabin.value
+    });
+
+    async function fetchRapid() {
+      const res = await fetch("https://datacrawler-google-flights-api.p.rapidapi.com/flights/search", {
+        method: "POST",
+        headers: {
+          "X-RapidAPI-Key": state.apiKey,
+          "X-RapidAPI-Host": "datacrawler-google-flights-api.p.rapidapi.com",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(searchPayload())
+      });
+      if (!res.ok) throw new Error(`RapidAPI ${res.status}`);
+      const data = await res.json();
+      if (data.status !== true || !Array.isArray(data.topFlights)) throw new Error("RapidAPI: no topFlights");
+      return { outbound: mapRapid(data, "outbound"), return: mapRapid(data, "return") };
+    }
+
+    async function fetchSerp() {
+      const params = new URLSearchParams({
+        engine: "google_flights",
+        departure_id: el.origin.value.toUpperCase(),
+        arrival_id:   el.destination.value.toUpperCase(),
+        outbound_date: el.outboundDate.value,
+        return_date:   el.returnDate.value,
+        type: "1", currency: "HKD", hl: "en",
+        api_key: state.apiKey
+      });
+      const res = await fetch(`https://serpapi.com/search.json?${params}`);
+      if (!res.ok) throw new Error(`SerpApi ${res.status}`);
+      const data = await res.json();
+      const mapped = mapSerp(data, "outbound");
+      if (!mapped.length) throw new Error("SerpApi: no flights");
+      return {
+        outbound: mapped,
+        return: mapped.map((f, i) => ({ ...f, id:`serp-return-${i}`, from:f.to, to:f.from }))
+      };
+    }
+
+    // ── Search orchestration ─────────────────────────────────
+    async function runSearch() {
+      state.apiProvider = el.apiProvider.value;
+      state.apiKey      = el.apiKey.value.trim();
+      updateHeader();
+      renderSkeleton();
+      await new Promise(r => setTimeout(r, 430));
+      try {
+        if (state.apiProvider === "rapidapi" && state.apiKey) {
+          state.flights = await fetchRapid();
+          state.lastMessage = "RapidAPI results";
+        } else if (state.apiProvider === "serpapi" && state.apiKey) {
+          state.flights = await fetchSerp();
+          state.lastMessage = "SerpApi results";
+        } else {
+          state.flights = structuredClone(MOCK);
+          state.lastMessage = "Demo Mode";
+        }
+      } catch (err) {
+        state.flights = structuredClone(MOCK);
+        state.lastMessage = "Demo fallback";
+        console.warn(err);
+      }
+      renderFlights();
+      refreshIcons();
+    }
+
+    // ── UI interactions ──────────────────────────────────────
+    function setTab(tab) {
+      state.activeTab = tab;
+      document.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+      renderFlights();
+    }
+
+    function applyTheme() {
+      el.html.dataset.theme = state.theme;
+      el.themeToggle.innerHTML = `<i data-lucide="${state.theme === "dark" ? "sun" : "moon"}"></i><span class="icon-fallback">T</span>`;
+      el.themeToggle.setAttribute("aria-label", state.theme === "dark" ? "Switch to light mode" : "Switch to dark mode");
+      refreshIcons();
+    }
+
+    function refreshIcons() {
+      if (window.lucide) {
+        el.html.classList.remove("lucide-unavailable");
+        window.lucide.createIcons({ attrs: { width:19, height:19, "stroke-width":2 } });
+      } else {
+        el.html.classList.add("lucide-unavailable");
+      }
+    }
+
+    function resetDefaults() {
+      el.origin.value       = "HKG";
+      el.destination.value  = "FUK";
+      el.outboundDate.value = isoOffset(7);
+      el.returnDate.value   = isoOffset(14);
+      el.passengers.value   = "1";
+      el.cabin.value        = "economy";
+      el.baggage.value      = "20";
+      el.maxStops.value     = "any";
+      el.airlineFilter.value = "any";
+      el.sortBy.value       = "price_asc";
+      state.timeWindows     = { outbound:"morning", return:"evening" };
+      document.querySelectorAll("[data-win-group]").forEach(g => {
+        g.querySelectorAll(".segment").forEach(s =>
+          s.classList.toggle("active", s.dataset.value === state.timeWindows[g.dataset.winGroup])
+        );
+      });
+      runSearch();
+    }
+
+    // ── Event listeners ──────────────────────────────────────
+    el.form.addEventListener("submit", e => { e.preventDefault(); runSearch(); });
+    el.resetFilters.addEventListener("click", resetDefaults);
+    el.swapRoute.addEventListener("click", () => {
+      [el.origin.value, el.destination.value] = [el.destination.value.toUpperCase(), el.origin.value.toUpperCase()];
+      runSearch();
+    });
+    el.settingsToggle.addEventListener("click", () => {
+      const open = el.settingsBody.classList.toggle("open");
+      el.settingsToggle.setAttribute("aria-expanded", String(open));
+      el.settingsToggle.querySelector("[data-chevron]").setAttribute("data-lucide", open ? "chevron-up" : "chevron-down");
+      refreshIcons();
+    });
+    el.themeToggle.addEventListener("click", () => { state.theme = state.theme === "dark" ? "light" : "dark"; applyTheme(); });
+    el.apiProvider.addEventListener("change", () => { state.apiProvider = el.apiProvider.value; updateHeader(); });
+    el.apiKey.addEventListener("input", () => { state.apiKey = el.apiKey.value.trim(); });
+    el.maxStops.addEventListener("change", renderFlights);
+    el.airlineFilter.addEventListener("change", renderFlights);
+    el.sortBy.addEventListener("change", renderFlights);
+    el.baggage.addEventListener("change", renderFlights);
+    document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
+    document.querySelectorAll("[data-win-group]").forEach(group => {
+      group.addEventListener("click", e => {
+        const btn = e.target.closest(".segment");
+        if (!btn) return;
+        state.timeWindows[group.dataset.winGroup] = btn.dataset.value;
+        group.querySelectorAll(".segment").forEach(s => s.classList.toggle("active", s === btn));
+        renderFlights();
+      });
+    });
+
+    // ── Init ─────────────────────────────────────────────────
+    el.outboundDate.value = isoOffset(7);
+    el.returnDate.value   = isoOffset(14);
+    applyTheme();
+    runSearch();
+  </script>
+</body>
+</html>

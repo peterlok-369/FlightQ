@@ -1,0 +1,314 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/* ── Nexus Warm Palette: Light ── */
+:root {
+  --radius: 0.5rem;
+  /* Teal accent */
+  --primary: oklch(0.42 0.09 185);
+  --primary-foreground: oklch(0.99 0 0);
+  /* Warm beige background */
+  --background: oklch(0.97 0.01 80);
+  --foreground: oklch(0.18 0.02 160);
+  /* Card surfaces */
+  --card: oklch(0.995 0.003 80);
+  --card-foreground: oklch(0.18 0.02 160);
+  /* Popover */
+  --popover: oklch(0.995 0.003 80);
+  --popover-foreground: oklch(0.18 0.02 160);
+  /* Secondary */
+  --secondary: oklch(0.94 0.01 80);
+  --secondary-foreground: oklch(0.35 0.02 160);
+  /* Muted */
+  --muted: oklch(0.93 0.008 80);
+  --muted-foreground: oklch(0.5 0.02 160);
+  /* Accent */
+  --accent: oklch(0.93 0.008 80);
+  --accent-foreground: oklch(0.18 0.02 160);
+  /* Destructive */
+  --destructive: oklch(0.58 0.24 27);
+  --destructive-foreground: oklch(0.99 0 0);
+  /* Borders */
+  --border: oklch(0.88 0.015 70);
+  --input: oklch(0.88 0.015 70);
+  --ring: oklch(0.42 0.09 185);
+  /* Charts */
+  --chart-1: oklch(0.42 0.09 185);
+  --chart-2: oklch(0.52 0.08 185);
+  --chart-3: oklch(0.62 0.07 185);
+  --chart-4: oklch(0.72 0.06 185);
+  --chart-5: oklch(0.82 0.05 185);
+  /* Sidebar */
+  --sidebar: oklch(0.96 0.01 80);
+  --sidebar-foreground: oklch(0.18 0.02 160);
+  --sidebar-primary: oklch(0.42 0.09 185);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.93 0.008 80);
+  --sidebar-accent-foreground: oklch(0.18 0.02 160);
+  --sidebar-border: oklch(0.88 0.015 70);
+  --sidebar-ring: oklch(0.42 0.09 185);
+}
+
+/* ── Nexus Warm Palette: Dark ── */
+.dark {
+  --primary: oklch(0.75 0.1 180);
+  --primary-foreground: oklch(0.12 0.02 180);
+  --background: oklch(0.14 0.015 160);
+  --foreground: oklch(0.93 0.01 160);
+  --card: oklch(0.17 0.015 160);
+  --card-foreground: oklch(0.93 0.01 160);
+  --popover: oklch(0.17 0.015 160);
+  --popover-foreground: oklch(0.93 0.01 160);
+  --secondary: oklch(0.22 0.015 160);
+  --secondary-foreground: oklch(0.75 0.01 160);
+  --muted: oklch(0.24 0.015 160);
+  --muted-foreground: oklch(0.65 0.02 160);
+  --accent: oklch(0.24 0.015 160);
+  --accent-foreground: oklch(0.93 0.01 160);
+  --destructive: oklch(0.7 0.19 22);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.3 0.02 160);
+  --input: oklch(0.3 0.02 160);
+  --ring: oklch(0.75 0.1 180);
+  --chart-1: oklch(0.75 0.1 180);
+  --chart-2: oklch(0.65 0.09 180);
+  --chart-3: oklch(0.55 0.08 180);
+  --chart-4: oklch(0.45 0.07 180);
+  --chart-5: oklch(0.35 0.06 180);
+  --sidebar: oklch(0.17 0.015 160);
+  --sidebar-foreground: oklch(0.93 0.01 160);
+  --sidebar-primary: oklch(0.75 0.1 180);
+  --sidebar-primary-foreground: oklch(0.12 0.02 180);
+  --sidebar-accent: oklch(0.24 0.015 160);
+  --sidebar-accent-foreground: oklch(0.99 0 0);
+  --sidebar-border: oklch(0.3 0.02 160);
+  --sidebar-ring: oklch(0.75 0.1 180);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    min-width: 320px;
+    font-family:
+      "Satoshi",
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      sans-serif;
+  }
+  #root {
+    min-height: 100svh;
+  }
+  input[type="date"] {
+    color-scheme: light;
+  }
+  .dark input[type="date"] {
+    color-scheme: dark;
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0;
+  }
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [type="button"]:not(:disabled),
+  [type="submit"]:not(:disabled),
+  [type="reset"]:not(:disabled),
+  a[href],
+  select:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled) {
+    @apply cursor-pointer;
+  }
+}
+
+@layer components {
+  .container {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .flex {
+    min-height: 0;
+    min-width: 0;
+  }
+
+  .shimmer-action,
+  .flight-card-spotlight,
+  .flightmark {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .flightmark {
+    overflow: hidden;
+  }
+
+  .flightmark::after {
+    content: "";
+    position: absolute;
+    left: 0.55rem;
+    right: 0.55rem;
+    bottom: 0.65rem;
+    height: 1px;
+    transform: translateX(-120%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in oklch, var(--primary) 55%, transparent),
+      transparent
+    );
+    transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: -1;
+  }
+
+  .flightmark svg {
+    animation: flightmark-drift 4.8s ease-in-out infinite;
+  }
+
+  .flightmark:hover::after {
+    transform: translateX(120%);
+  }
+
+  .flightmark:hover svg {
+    animation-duration: 1.6s;
+  }
+
+  @keyframes flightmark-drift {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) rotate(0deg);
+    }
+    50% {
+      transform: translate3d(1px, -1px, 0) rotate(3deg);
+    }
+  }
+
+  .shimmer-action {
+    overflow: hidden;
+  }
+
+  .shimmer-action::after {
+    content: "";
+    position: absolute;
+    inset: -60% auto -60% -35%;
+    width: 32%;
+    transform: translateX(-140%) rotate(18deg);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in oklch, var(--primary-foreground) 36%, transparent),
+      transparent
+    );
+    transition: transform 640ms cubic-bezier(0.22, 1, 0.36, 1);
+    z-index: -1;
+  }
+
+  .shimmer-action:hover::after {
+    transform: translateX(520%) rotate(18deg);
+  }
+
+  .flight-card-spotlight::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(
+      420px circle at var(--spotlight-x, 50%) var(--spotlight-y, 0%),
+      color-mix(in oklch, var(--primary) 16%, transparent),
+      transparent 62%
+    );
+    opacity: 0;
+    transition: opacity 180ms ease;
+    z-index: 0;
+  }
+
+  .flight-card-spotlight > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .flight-card-spotlight:hover::before {
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shimmer-action::after,
+    .flight-card-spotlight::before,
+    .flightmark::after {
+      display: none;
+    }
+
+    .flightmark svg {
+      animation: none;
+    }
+  }
+
+  @media (min-width: 640px) {
+    .container {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .container {
+      padding-left: 2rem;
+      padding-right: 2rem;
+      max-width: 1280px;
+    }
+  }
+}
+
+/* Smooth transitions for theme changes */
+html {
+  transition: background-color 200ms ease;
+}
